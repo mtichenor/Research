@@ -1,6 +1,5 @@
 package frc.team2974.robot.command.teleop;
 
-import static frc.team2974.robot.Config.Driving.CRUISE_POWER;
 import static frc.team2974.robot.OI.gamepad;
 import static frc.team2974.robot.Robot.drivetrain;
 
@@ -34,46 +33,56 @@ public class DriveCommand extends Command {
     double leftPower = 0;
     double rightPower = 0;
     // check mode
+    // use a sequential action queue and check drivetrain.isMoving() to determine when 
+    // to move to next action 
+
 
     // see what is pressed
     if (gamepad.getButton(4)) {
-      drivetrain.ZeroYaw();
+      //drivetrain.ZeroYaw();  // this will offset the Yaw, so do not use
+      leftPower = -drivetrain.RotateTo(4, 0); 
+      rightPower = -leftPower; 
     } else if (gamepad.getButton(1)) {
       // spin -90 degrees
-      leftPower = -Spin(1, -90); 
+      leftPower = -drivetrain.Spin(1, -90); 
       rightPower = -leftPower; 
     } else if (gamepad.getButton(2)) {
       // spin 180 degrees clockwise
-      leftPower = -Spin(2, 180); 
+      leftPower = -drivetrain.Spin(2, 180); 
       rightPower = -leftPower;  
     } else if (gamepad.getButton(3)) {
       // spin 90 degrees 
-      leftPower = -Spin(3, 90); 
+      leftPower = -drivetrain.Spin(3, 90); 
       rightPower = -leftPower;       
-    } else if (gamepad.getButton(8) && drivetrain.m_LimelightHasValidTarget) {
+    } else if (gamepad.getButton(8) && drivetrain.limelightHasValidTarget) {
       // auto drive to target
-      drivetrain.isTurning = false;
-      drivetrain.turnController.disable();
-      leftPower = drivetrain.m_LimelightDriveCommand - drivetrain.m_LimelightSteerCommand;
-      rightPower = drivetrain.m_LimelightDriveCommand + drivetrain.m_LimelightSteerCommand;   
+      if (drivetrain.turnController.isEnabled()) {
+        drivetrain.turnController.disable();
+      }
+
+      leftPower = drivetrain.limelightDriveCommand - drivetrain.limelightSteerCommand;
+      rightPower = drivetrain.limelightDriveCommand + drivetrain.limelightSteerCommand;   
     } else if (gamepad.getButton(7)) {
       // maintain current heading with speed of average of left and right throttles
-      drivetrain.isTurning = false;
-      SetControllerAngle(drivetrain.ahrs.getYaw());
+      drivetrain.SetTurnController(drivetrain.ahrs.getYaw());
       double magnitude = (getLeftThrottle() + getRightThrottle()) / 2;
-      leftPower = magnitude + drivetrain.rotateToAngleRate;
-      rightPower = magnitude - drivetrain.rotateToAngleRate;
-    } else if (gamepad.getButton(9)) {
-      // drive forward 1 meter at current heading with controlled speeds
-      drivetrain.isTurning = false;
-      SetControllerAngle(drivetrain.ahrs.getYaw());
-      double magnitude = 0.75;
-      leftPower = magnitude + drivetrain.rotateToAngleRate;
-      rightPower = magnitude - drivetrain.rotateToAngleRate;
+      leftPower = magnitude - drivetrain.rotateToAngleRate;
+      rightPower = magnitude + drivetrain.rotateToAngleRate;
+    } else if (gamepad.getButton(5)) {
+      // drive forward 1 meter at current heading
+      drivetrain.SetTurnController(drivetrain.ahrs.getYaw());
+      drivetrain.SetDistanceController(1.0);
+      leftPower = -drivetrain.driveToDistanceRate - drivetrain.rotateToAngleRate;;
+      rightPower = -drivetrain.driveToDistanceRate + drivetrain.rotateToAngleRate;
   } else {
       // manual tank
-      drivetrain.isTurning = false;
-      drivetrain.turnController.disable();
+      if (drivetrain.turnController.isEnabled()) {
+        drivetrain.turnController.disable();
+      }     
+      if (drivetrain.distanceController.isEnabled()) {
+        drivetrain.distanceController.disable();
+      }
+
       leftPower = getLeftThrottle() * 0.75;  // scale back power
       rightPower = getRightThrottle() * 0.75;
     }
@@ -87,25 +96,6 @@ public class DriveCommand extends Command {
     } else {
       drivetrain.isMoving = false;
     }
-  }
-
-  private double Spin(int button, float angle) {
-    if (!drivetrain.isTurning) {
-      drivetrain.SetTargetAngleRel(angle);
-      drivetrain.isTurning = true;
-      System.out.println("Button " + button + " pressed.  Spin " + angle + " degrees to: " + drivetrain.kTargetAngleDegrees);
-      SetControllerAngle(drivetrain.kTargetAngleDegrees);
-    }
-
-    return drivetrain.rotateToAngleRate;
-  }
-
-  private void SetControllerAngle (double angle) {
-    //drivetrain.turnController.disable();
-    drivetrain.turnController.setSetpoint(angle);
-    System.out.println("Turn controller set to: " + angle);
-    drivetrain.rotateToAngleRate = 0; // This value will be updated in the pidWrite() method.
-    drivetrain.turnController.enable();
   }
 
   // Called just before this Command runs the first time

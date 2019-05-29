@@ -55,7 +55,7 @@ public class Robot extends TimedRobot { //extends IterativeRobot {
   public void disabledInit() {
     drivetrain.cancelControllerMotion();
     drivetrain.reset();
-    motionLogger.writeMotionDataCSV();
+    //motionLogger.writeMotionDataCSV();
   }
 
   @Override
@@ -121,8 +121,6 @@ public class Robot extends TimedRobot { //extends IterativeRobot {
     System.out.print(caller + ": " + java.time.LocalTime.now() + " R dist: " + -RobotMap.encoderLeft.getDistance() + " L dist: " + -RobotMap.encoderRight.getDistance());
     System.out.print(" Heading: " +  drivetrain.ahrs.getYaw() + " Rotate rate: " + drivetrain.rotateToAngleRate);
     System.out.println(" 3D LR offset: " + drivetrain.camtran[0] + " 3D dist offset: " + drivetrain.camtran[2]);
-    //SmartDashboard.putNumber("Left_Enc_Dist", RobotMap.encoderLeft.getDistance());
-    //SmartDashboard.putNumber("Right_Enc_Dist", RobotMap.encoderRight.getDistance());
     SmartDashboard.putNumber("R_Enc_Dist", -RobotMap.encoderLeft.getDistance());
     SmartDashboard.putNumber("L_Enc_Dist", -RobotMap.encoderRight.getDistance());
 
@@ -172,7 +170,7 @@ public class Robot extends TimedRobot { //extends IterativeRobot {
     SmartDashboard.putNumber(   "Limelight tx",          drivetrain.tx);
     SmartDashboard.putNumber(   "Limelight ty",          drivetrain.ty);
     SmartDashboard.putNumber(   "Limelight ta",          drivetrain.ta);
-    SmartDashboard.putBoolean(   "Limelight target?",            drivetrain.m_LimelightHasValidTarget);
+    SmartDashboard.putBoolean(   "Limelight target?",            drivetrain.limelightHasValidTarget);
     SmartDashboard.putNumber(   "Limelight 3D x",          drivetrain.camtran[0]);
     //SmartDashboard.putNumber(   "Limelight 3D y",          drivetrain.camtran[1]);
     SmartDashboard.putNumber(   "Limelight 3D z",          drivetrain.camtran[2]);
