@@ -4,10 +4,6 @@ import static frc.team2974.robot.Config.Input.GAMEPAD_PORT;
 
 import edu.wpi.first.wpilibj.buttons.Button;
 import edu.wpi.first.wpilibj.buttons.JoystickButton;
-import frc.team2974.robot.command.teleop.Rotate;
-//import frc.team2974.robot.util.ButtonOnce;
-//import frc.team2974.robot.util.POVButton;
-import static frc.team2974.robot.Robot.drivetrain;
 
 /**
  * This class is the glue that binds the controls on the physical operator interface to the commands and command groups

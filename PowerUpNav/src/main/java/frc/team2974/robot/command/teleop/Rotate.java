@@ -27,24 +27,6 @@ public class Rotate extends InstantCommand {
     requires(drivetrain);
   }
 
-  public void SetTargetAngleAbs(double degrees) {
-    drivetrain.kTargetAngleDegrees = degrees;
-  } 
-  
-  public void SetTargetAngleRel(double degrees) {
-    drivetrain.kTargetAngleDegrees = drivetrain.ahrs.getYaw() + degrees;
-
-    if (drivetrain.kTargetAngleDegrees > 180) {
-      drivetrain.kTargetAngleDegrees = 360 - drivetrain.kTargetAngleDegrees; 
-    } else if (drivetrain.kTargetAngleDegrees < 180) {
-      drivetrain.kTargetAngleDegrees = 360 + drivetrain.kTargetAngleDegrees; 
-    }
-  }
-  
-  public void ZeroYaw() {
-    drivetrain.ahrs.zeroYaw();
-  }
-
   // Called once when the command executes
   @Override
   protected void initialize() {

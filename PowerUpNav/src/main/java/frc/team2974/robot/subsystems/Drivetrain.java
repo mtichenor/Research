@@ -18,6 +18,8 @@ import org.waltonrobotics.MotionLogger;
 import org.waltonrobotics.controller.RobotPair;
 import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.PIDOutput;
+import edu.wpi.first.wpilibj.PIDSource;
+import edu.wpi.first.wpilibj.PIDSourceType;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
@@ -26,17 +28,19 @@ import edu.wpi.first.networktables.*;
 /**
  *
  */
-public class Drivetrain extends AbstractDrivetrain implements PIDOutput {
+public class Drivetrain extends AbstractDrivetrain {
 
   private final SendableChooser<Boolean> driveMode;
   public PIDController turnController;
+  public PIDController distanceController;
   public double rotateToAngleRate;
+  public double driveToDistanceRate;
   public AHRS ahrs;
 
   // limelight
-  public boolean m_LimelightHasValidTarget = false;
-  public double m_LimelightDriveCommand;
-  public double m_LimelightSteerCommand;
+  public boolean limelightHasValidTarget = false;
+  public double limelightDriveCommand;
+  public double limelightSteerCommand;
   public double tv;
   public double tx;
   public double ty; 
@@ -49,14 +53,13 @@ public class Drivetrain extends AbstractDrivetrain implements PIDOutput {
   /* SmartDashboard in Test mode has support for helping you tune    */
   /* controllers by displaying a form where you can enter new P, I,  */
   /* and D constants and test the mechanism.                         */
-  static final double kP = 0.015;
+  static final double kP = 0.04;
   static final double kI = 0.00;
   static final double kD = 0.00;
   static final double kF = 0.00;
-  static final double kToleranceDegrees = 2.0f;    
-  public double kTargetAngleDegrees;
+  static final double kToleranceDegrees = 3.0f;    
+  public float kTargetAngleDegrees;
   public boolean isMoving = false;
-  public boolean isTurning = false;
 
   //public Drivetrain() {
   public Drivetrain(MotionLogger motionLogger) {
@@ -79,34 +82,68 @@ public class Drivetrain extends AbstractDrivetrain implements PIDOutput {
       //DriverStation.reportError("Error instantiating navX-MXP:  " + ex.getMessage(), true);
     }
 
-    turnController = new PIDController(kP, kI, kD, kF, ahrs, this);
+    turnController = new PIDController(kP, kI, kD, kF, ahrs, turnControllerOut, 0.02);
     turnController.setInputRange(-180.0f, 180.0f);
-    turnController.setOutputRange(-0.75, 0.75);
+    turnController.setOutputRange(-0.7, 0.7);
     turnController.setAbsoluteTolerance(kToleranceDegrees);
     turnController.setContinuous(true);
     turnController.disable();
-
     //LiveWindow.addSensor("DriveSystem", "RotateController", turnController);
+
+    distanceController = new PIDController(1.5, kI, kD, kF, distanceSource, distanceControllerOut, 0.02);
+    distanceController.setInputRange(-180.0f, 180.0f);
+    distanceController.setOutputRange(-0.7, 0.7);
+    distanceController.setAbsoluteTolerance(0.05);
+    distanceController.setContinuous(false);
+    distanceController.disable();
   }
 
-  @Override
-  /* This function is invoked periodically by the PID Controller, */
-  /* based upon navX-MXP yaw angle input and PID Coefficients.    */
-  public void pidWrite(double output) {
-    if (Math.abs(kTargetAngleDegrees - ahrs.getYaw()) <= kToleranceDegrees) {
-      rotateToAngleRate = 0;
-      //isTurning = false;  // turn is complete
-      //turnController.disable();
-    } else {
+  // Define PIDSource based on distance to travel
+  //
+  PIDSource distanceSource = new PIDSource() {
+    @Override
+    public void setPIDSourceType(PIDSourceType pidSource) {
+    }
+
+    @Override
+    public PIDSourceType getPIDSourceType() {
+      // Distance type PID
+      return PIDSourceType.kDisplacement;
+    }
+
+    @Override
+    public double pidGet() {
+      return -encoderLeft.getDistance();
+    }
+  };
+
+  PIDOutput turnControllerOut = new PIDOutput() {
+    @Override
+    public void pidWrite(double output) {
       if ((output > 0.1) && (output < 0.3)) {
         rotateToAngleRate = 0.3;
-      } else if ((output < 0.1) && (output > -0.3)) {
+      } else if ((output < -0.1) && (output > -0.3)) {
         rotateToAngleRate = -0.3;
       } else {
         rotateToAngleRate = output;
       }
     }
-  }
+  };
+
+  PIDOutput distanceControllerOut = new PIDOutput() {
+    @Override
+    public void pidWrite(double output) {
+      if ((output > 0.1) && (output < 0.3)) {
+        driveToDistanceRate = 0.3;
+      } else if ((output < -0.1) && (output > -0.3)) {
+        driveToDistanceRate = -0.3;
+      } else {
+        driveToDistanceRate = output;
+      }
+
+      System.out.println("Distance controller rate: " + driveToDistanceRate);
+    }
+  };
 
   public void SetTargetAngleAbs(float degrees) {
     kTargetAngleDegrees = degrees;
@@ -114,14 +151,52 @@ public class Drivetrain extends AbstractDrivetrain implements PIDOutput {
   
   public void SetTargetAngleRel(float degrees) {
     if ((ahrs.getYaw() + degrees) > 180.0) {
-      kTargetAngleDegrees = ahrs.getYaw() + degrees - 360.0; 
+      kTargetAngleDegrees = ahrs.getYaw() + degrees - 360.0f; 
     } else if ((ahrs.getYaw() + degrees) < -180.0) {
-      kTargetAngleDegrees = ahrs.getYaw() + degrees + 360.0; 
+      kTargetAngleDegrees = ahrs.getYaw() + degrees + 360.0f; 
     } else {
       kTargetAngleDegrees = ahrs.getYaw() + degrees;
     }
   }
   
+  public double Spin(int button, float angle) {
+    if (!turnController.isEnabled()) {
+      SetTargetAngleRel(angle);
+      System.out.println("Button " + button + " pressed.  Spin " + angle + " degrees to: " + kTargetAngleDegrees);
+      SetTurnController(kTargetAngleDegrees);
+    }
+
+    return rotateToAngleRate;
+  }  
+  
+  public double RotateTo(int button, float angle) {
+    if (!turnController.isEnabled()) {
+      SetTargetAngleAbs(angle);
+      System.out.println("Button " + button + " pressed.  Rotate to " + kTargetAngleDegrees + " degrees.");
+      SetTurnController(kTargetAngleDegrees);
+    }
+
+    return rotateToAngleRate;
+  }
+
+  public void SetTurnController (double angle) {
+    if (!turnController.isEnabled()) {
+      turnController.setSetpoint(angle);
+      System.out.println("Turn controller heading set to " + angle + " degrees.");
+      rotateToAngleRate = 0; // This value will be updated in the pidWrite() method.
+      turnController.enable();
+    }
+  }
+
+  public void SetDistanceController (double distance) {
+    if (!distanceController.isEnabled()) {
+      distanceController.setSetpoint(-encoderLeft.getDistance() + distance);
+      System.out.println("Distance controller set to " + -encoderLeft.getDistance() + distance + " meters.");
+      driveToDistanceRate = 0; // This value will be updated in the pidWrite() method.
+      distanceController.enable();
+    }
+  }
+
   public void ZeroYaw() {
     ahrs.zeroYaw();
   }
@@ -161,8 +236,6 @@ public class Drivetrain extends AbstractDrivetrain implements PIDOutput {
 
   @Override
   public void setSpeeds(double leftPower, double rightPower) {
-    //motorRight.set(-rightPower);
-    //motorLeft.set(-leftPower);
     motorRight.set(-leftPower);
     motorLeft.set(-rightPower);
   }
@@ -182,9 +255,9 @@ public class Drivetrain extends AbstractDrivetrain implements PIDOutput {
   public void Update_Limelight_Tracking()
   {
     // These numbers must be tuned for your Robot!  Be careful!
-    final double STEER_K = 0.02;                    // how hard to turn toward the target
-    final double DRIVE_K = 0.10;                    // how hard to drive fwd toward the target
-    final double DESIRED_Z_DIST = 35.0;             // Z distance to target
+    final double STEER_K = 0.015;                    // how hard to turn toward the target
+    //final double DRIVE_K = 0.10;                    // how hard to drive fwd toward the target
+    final double DESIRED_Z_DIST = 25.0;             // Z distance to target
     final double MAX_DRIVE = 0.75;                   // Simple speed limit so we don't drive too fast
 
     tv = NetworkTableInstance.getDefault().getTable("limelight").getEntry("tv").getDouble(0);
@@ -194,15 +267,15 @@ public class Drivetrain extends AbstractDrivetrain implements PIDOutput {
     camtran = NetworkTableInstance.getDefault().getTable("limelight").getEntry("camtran").getDoubleArray(camTranDefaults);
     
     if (tv < 1.0) {
-      m_LimelightHasValidTarget = false;
-      m_LimelightDriveCommand = 0.0;
-      m_LimelightSteerCommand = 0.0;
+      limelightHasValidTarget = false;
+      limelightDriveCommand = 0.0;
+      limelightSteerCommand = 0.0;
     } else {
-      m_LimelightHasValidTarget = true;
+      limelightHasValidTarget = true;
 
       // Start with proportional steering
       double steer_cmd = tx * STEER_K;
-      m_LimelightSteerCommand = steer_cmd;
+      limelightSteerCommand = steer_cmd;
 
       // try to drive forward until the target area reaches our desired area
       double drive_cmd = 0;
@@ -211,11 +284,13 @@ public class Drivetrain extends AbstractDrivetrain implements PIDOutput {
       if (-camtran[2] - DESIRED_Z_DIST > 60) {
         drive_cmd = MAX_DRIVE * 0.85;
       } else if (-camtran[2] - DESIRED_Z_DIST > 40) {
-        drive_cmd = MAX_DRIVE * 0.7;   
+        drive_cmd = MAX_DRIVE * 0.65;   
       } else if (-camtran[2] - DESIRED_Z_DIST > 20) {
         drive_cmd = MAX_DRIVE * 0.5;     
       } else if (ta > 0 && camtran[2] == 0) {
         drive_cmd = MAX_DRIVE;
+      } else if (-camtran[2] > DESIRED_Z_DIST) {
+        drive_cmd = 0.0;
       } else {
         drive_cmd = 0.3;
       }
@@ -227,7 +302,7 @@ public class Drivetrain extends AbstractDrivetrain implements PIDOutput {
         drive_cmd = 0.3;
       }
 
-      m_LimelightDriveCommand = -drive_cmd;
+      limelightDriveCommand = -drive_cmd;
     }
   }
 
