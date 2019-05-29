@@ -12,6 +12,7 @@ public class ButtonOnce extends JoystickButton {
 
   public ButtonOnce(GenericHID hid, int channel) {
     super(hid, channel);
+    System.out.println("Buttom pressed: " + channel);
     down = false;
   }
 

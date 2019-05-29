@@ -1,6 +1,6 @@
 package frc.team2974.robot;
 
-import static frc.team2974.robot.RobotMap.pneumaticsShifter;
+//import static frc.team2974.robot.RobotMap.pneumaticsShifter;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.command.Scheduler;
@@ -9,10 +9,6 @@ import frc.team2974.robot.subsystems.Drivetrain;
 import org.waltonrobotics.MotionLogger;
 import edu.wpi.first.wpilibj.TimedRobot;
 
-import com.kauailabs.navx.frc.AHRS;
-import edu.wpi.first.wpilibj.SPI;
-
-import edu.wpi.first.networktables.*;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to each mode, as
@@ -26,18 +22,11 @@ public class Robot extends TimedRobot { //extends IterativeRobot {
 
   private static Config.Robot currentRobot;
 
-  private AHRS ahrs;
 
-  private boolean m_LimelightHasValidTarget = false;
-  private double m_LimelightDriveCommand;
-  private double m_LimelightSteerCommand;
-  private double tv;
-  private double tx;
-  private double ty; 
-  private double ta; 
-  private double camtran[];
-  private double camTranDefaults[] = {0.0,0.0,0.0,0.0,0.0,0.0};
   private int counter = 0;
+
+  //PIDController turnController;
+  // TODO:  add rotate, drive to target, drive distance (encoder), combine for auto
 
   public static Config.Robot getChoosenRobot() {
     return currentRobot;
@@ -54,20 +43,10 @@ public class Robot extends TimedRobot { //extends IterativeRobot {
     drivetrain = new Drivetrain(motionLogger);
 
     //		Drive train
-    SmartDashboard.putNumber("Speed Percentage", 0.50 /*.75*/);
-    SmartDashboard.getNumber("Bottom power", .2);
+    //SmartDashboard.putNumber("Speed %", 0.50 /*.75*/);
+    //SmartDashboard.getNumber("Bottom power", .2);
 
     drivetrain.shiftDown();
-
-    try {
-      /* Communicate w/navX-MXP via the MXP SPI Bus.                                     */
-      /* Alternatively:  I2C.Port.kMXP, SerialPort.Port.kMXP or SerialPort.Port.kUSB     */
-      /* See http://navx-mxp.kauailabs.com/guidance/selecting-an-interface/ for details. */
-      ahrs = new AHRS(SPI.Port.kMXP); 
-      System.out.println("navX initialized on SPI bus.");
-    } catch (RuntimeException ex ) {
-      DriverStation.reportError("Error instantiating navX-MXP:  " + ex.getMessage(), true);
-    }
 
     System.out.println("Robot initializing...");
   }
@@ -95,6 +74,7 @@ public class Robot extends TimedRobot { //extends IterativeRobot {
   @Override
   public void autonomousPeriodic() {
     Scheduler.getInstance().run();
+    drivetrain.Update_Limelight_Tracking();
     updateSmartDashboard("Auto");
   }
 
@@ -111,7 +91,7 @@ public class Robot extends TimedRobot { //extends IterativeRobot {
   @Override
   public void teleopPeriodic() {
     Scheduler.getInstance().run();
-    Update_Limelight_Tracking();
+    drivetrain.Update_Limelight_Tracking();
     updateSmartDashboard("TeleOp");
   }
 
@@ -130,8 +110,8 @@ public class Robot extends TimedRobot { //extends IterativeRobot {
    * Put things in here you want to update for SmartDashboard.
    */
   private void updateSmartDashboard(String caller) {
-    // only update every 10th call to save CPU and bandwidth (about 200ms)
-    if (counter == 10) {
+    // only update every 10th call to save CPU and bandwidth (about 500ms)
+    if (counter == 50) {
       counter = 0;
     } else {
       counter++;
@@ -139,12 +119,12 @@ public class Robot extends TimedRobot { //extends IterativeRobot {
     }
 
     System.out.print(caller + ": " + java.time.LocalTime.now() + " R dist: " + -RobotMap.encoderLeft.getDistance() + " L dist: " + -RobotMap.encoderRight.getDistance());
-    System.out.print(" Heading: " +  ahrs.getFusedHeading());
-    System.out.println(" 3D x: " + camtran[0] + " 3D y: " + camtran[1] + " 3D z: " + camtran[2]);
+    System.out.print(" Heading: " +  drivetrain.ahrs.getYaw() + " Rotate rate: " + drivetrain.rotateToAngleRate);
+    System.out.println(" 3D LR offset: " + drivetrain.camtran[0] + " 3D dist offset: " + drivetrain.camtran[2]);
     //SmartDashboard.putNumber("Left_Enc_Dist", RobotMap.encoderLeft.getDistance());
     //SmartDashboard.putNumber("Right_Enc_Dist", RobotMap.encoderRight.getDistance());
-    SmartDashboard.putNumber("Right_Enc_Dist", -RobotMap.encoderLeft.getDistance());
-    SmartDashboard.putNumber("Left_Enc_Dist", -RobotMap.encoderRight.getDistance());
+    SmartDashboard.putNumber("R_Enc_Dist", -RobotMap.encoderLeft.getDistance());
+    SmartDashboard.putNumber("L_Enc_Dist", -RobotMap.encoderRight.getDistance());
 
     // Drivetrain
     //SmartDashboard.putString("Gear", pneumaticsShifter.get() ? "Low" : "High");
@@ -156,10 +136,13 @@ public class Robot extends TimedRobot { //extends IterativeRobot {
     
     /* Display tilt-corrected, Magnetometer-based heading (requires             */
     /* magnetometer calibration to be useful)                                   */
-    SmartDashboard.putNumber(   "IMU_CompassHeading",   ahrs.getCompassHeading());
+    //SmartDashboard.putNumber(   "IMU_C_Head",   ahrs.getCompassHeading());
     
     /* Display 9-axis Heading (requires magnetometer calibration to be useful)  */
-    SmartDashboard.putNumber(   "IMU_FusedHeading",     ahrs.getFusedHeading());
+    //SmartDashboard.putNumber(   "IMU_F_Head",     ahrs.getFusedHeading());
+    // Angle is total degrees including rotations (useful for a turret)
+    //SmartDashboard.putNumber(   "IMU_Angle",     ahrs.getAngle());
+    SmartDashboard.putNumber(   "IMU_Yaw",     drivetrain.ahrs.getYaw());
 
     /* Display Processed Acceleration Data (Linear Acceleration, Motion Detect) */
     //SmartDashboard.putBoolean(  "IMU_IsMoving",         ahrs.isMoving());
@@ -185,53 +168,15 @@ public class Robot extends TimedRobot { //extends IterativeRobot {
     //SmartDashboard.putNumber(   "IMU_Update_Count",     ahrs.getUpdateCount());
 
     /* Limelight */
-    SmartDashboard.putNumber(   "Limelight tv",          tv);
-    SmartDashboard.putNumber(   "Limelight tx",          tx);
-    SmartDashboard.putNumber(   "Limelight ty",          ty);
-    SmartDashboard.putNumber(   "Limelight ta",          ta);
-    SmartDashboard.putBoolean(   "Limelight valid target",            m_LimelightHasValidTarget);
-    SmartDashboard.putNumber(   "Limelight 3D x",          camtran[0]);
-    SmartDashboard.putNumber(   "Limelight 3D y",          camtran[1]);
-    SmartDashboard.putNumber(   "Limelight 3D z",          camtran[2]);
+    //SmartDashboard.putNumber(   "Limelight tv",          tv);
+    SmartDashboard.putNumber(   "Limelight tx",          drivetrain.tx);
+    SmartDashboard.putNumber(   "Limelight ty",          drivetrain.ty);
+    SmartDashboard.putNumber(   "Limelight ta",          drivetrain.ta);
+    SmartDashboard.putBoolean(   "Limelight target?",            drivetrain.m_LimelightHasValidTarget);
+    SmartDashboard.putNumber(   "Limelight 3D x",          drivetrain.camtran[0]);
+    //SmartDashboard.putNumber(   "Limelight 3D y",          drivetrain.camtran[1]);
+    SmartDashboard.putNumber(   "Limelight 3D z",          drivetrain.camtran[2]);
     
-  }
-
-  public void Update_Limelight_Tracking()
-  {
-    // These numbers must be tuned for your Robot!  Be careful!
-    final double STEER_K = 0.03;                    // how hard to turn toward the target
-    final double DRIVE_K = 0.26;                    // how hard to drive fwd toward the target
-    final double DESIRED_TARGET_AREA = 13.0;        // Area of the target when the robot reaches the wall
-    final double MAX_DRIVE = 0.7;                   // Simple speed limit so we don't drive too fast
-
-    tv = NetworkTableInstance.getDefault().getTable("limelight").getEntry("tv").getDouble(0);
-    tx = NetworkTableInstance.getDefault().getTable("limelight").getEntry("tx").getDouble(0);
-    ty = NetworkTableInstance.getDefault().getTable("limelight").getEntry("ty").getDouble(0);
-    ta = NetworkTableInstance.getDefault().getTable("limelight").getEntry("ta").getDouble(0);
-    camtran = NetworkTableInstance.getDefault().getTable("limelight").getEntry("camtran").getDoubleArray(camTranDefaults);
-    
-    if (tv < 1.0)
-    {
-      m_LimelightHasValidTarget = false;
-      m_LimelightDriveCommand = 0.0;
-      m_LimelightSteerCommand = 0.0;
-      return;
-    }
-
-    m_LimelightHasValidTarget = true;
-
-    // Start with proportional steering
-    double steer_cmd = tx * STEER_K;
-    m_LimelightSteerCommand = steer_cmd;
-
-    // try to drive forward until the target area reaches our desired area
-    double drive_cmd = (DESIRED_TARGET_AREA - ta) * DRIVE_K;
-
-    // don't let the robot drive too fast into the goal
-    if (drive_cmd > MAX_DRIVE)
-    {
-      drive_cmd = MAX_DRIVE;
-    }
-    m_LimelightDriveCommand = drive_cmd;
   }
 }
+  

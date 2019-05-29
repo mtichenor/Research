@@ -8,12 +8,7 @@ plugins {
 
 }
 
-
-
 def ROBOT_MAIN_CLASS = "frc.team2974.robot.Main"
-//def ROBOT_MAIN_CLASS = "frc.robot.Main"
-//def ROBOT_CLASS = "frc.team2974.robot.Robot"
-
 
 // Define my targets (RoboRIO) and artifacts (deployable files)
 

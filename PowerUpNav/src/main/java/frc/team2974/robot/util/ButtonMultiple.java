@@ -31,6 +31,7 @@ public class ButtonMultiple extends Button {
   public boolean get() {
     for (int buttonNumber : buttonNumbers) {
       if (joystick.getRawButton(buttonNumber)) {
+        
         return true;
       }
     }
