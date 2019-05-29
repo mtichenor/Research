@@ -44,7 +44,7 @@ public final class RobotMap {
 
     compressor = new Compressor();
     compressor.stop();
-    System.out.println("Compressor stopped to save battery.");
+    System.out.println("Compressor stopped to save battery.  You can change this in RobotMap.java.");
     pneumaticsShifter = new Solenoid(SHIFTER_CHANNEL);
 
     robotIdentifier = new DigitalInput(ROBOT_IDENTIFIER_CHANNEL);
