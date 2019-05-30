@@ -141,7 +141,7 @@ public class Drivetrain extends AbstractDrivetrain {
         driveToDistanceRate = output;
       }
 
-      System.out.println("Distance controller rate: " + driveToDistanceRate);
+      //System.out.println("Distance controller rate: " + driveToDistanceRate);
     }
   };
 
@@ -159,20 +159,20 @@ public class Drivetrain extends AbstractDrivetrain {
     }
   }
   
-  public double Spin(int button, float angle) {
+  public double Spin(float angle) {
     if (!turnController.isEnabled()) {
       SetTargetAngleRel(angle);
-      System.out.println("Button " + button + " pressed.  Spin " + angle + " degrees to: " + kTargetAngleDegrees);
+      System.out.println("Spin " + angle + " degrees to: " + kTargetAngleDegrees);  
       SetTurnController(kTargetAngleDegrees);
     }
 
     return rotateToAngleRate;
   }  
   
-  public double RotateTo(int button, float angle) {
+  public double RotateTo(float angle) {
     if (!turnController.isEnabled()) {
       SetTargetAngleAbs(angle);
-      System.out.println("Button " + button + " pressed.  Rotate to " + kTargetAngleDegrees + " degrees.");
+      System.out.println("Rotate to " + kTargetAngleDegrees + " degrees.");
       SetTurnController(kTargetAngleDegrees);
     }
 
@@ -182,7 +182,7 @@ public class Drivetrain extends AbstractDrivetrain {
   public void SetTurnController (double angle) {
     if (!turnController.isEnabled()) {
       turnController.setSetpoint(angle);
-      System.out.println("Turn controller heading set to " + angle + " degrees.");
+      System.out.println("Turn controller heading set to " + turnController.getSetpoint() + " degrees.");
       rotateToAngleRate = 0; // This value will be updated in the pidWrite() method.
       turnController.enable();
     }
@@ -191,7 +191,7 @@ public class Drivetrain extends AbstractDrivetrain {
   public void SetDistanceController (double distance) {
     if (!distanceController.isEnabled()) {
       distanceController.setSetpoint(-encoderLeft.getDistance() + distance);
-      System.out.println("Distance controller set to " + -encoderLeft.getDistance() + distance + " meters.");
+      System.out.println("Distance controller set to " + distanceController.getSetpoint() + " meters.");
       driveToDistanceRate = 0; // This value will be updated in the pidWrite() method.
       distanceController.enable();
     }

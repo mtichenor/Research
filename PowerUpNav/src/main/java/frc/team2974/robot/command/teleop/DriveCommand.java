@@ -32,27 +32,23 @@ public class DriveCommand extends Command {
   private void tankDrive() {
     double leftPower = 0;
     double rightPower = 0;
-    // check mode
-    // use a sequential action queue and check drivetrain.isMoving() to determine when 
-    // to move to next action 
-
-
+    
     // see what is pressed
     if (gamepad.getButton(4)) {
       //drivetrain.ZeroYaw();  // this will offset the Yaw, so do not use
-      leftPower = -drivetrain.RotateTo(4, 0); 
+      leftPower = -drivetrain.RotateTo(0); 
       rightPower = -leftPower; 
     } else if (gamepad.getButton(1)) {
       // spin -90 degrees
-      leftPower = -drivetrain.Spin(1, -90); 
+      leftPower = -drivetrain.Spin(-90); 
       rightPower = -leftPower; 
     } else if (gamepad.getButton(2)) {
       // spin 180 degrees clockwise
-      leftPower = -drivetrain.Spin(2, 180); 
+      leftPower = -drivetrain.Spin(180); 
       rightPower = -leftPower;  
     } else if (gamepad.getButton(3)) {
       // spin 90 degrees 
-      leftPower = -drivetrain.Spin(3, 90); 
+      leftPower = -drivetrain.Spin(90); 
       rightPower = -leftPower;       
     } else if (gamepad.getButton(8) && drivetrain.limelightHasValidTarget) {
       // auto drive to target
@@ -74,7 +70,7 @@ public class DriveCommand extends Command {
       drivetrain.SetDistanceController(1.0);
       leftPower = -drivetrain.driveToDistanceRate - drivetrain.rotateToAngleRate;;
       rightPower = -drivetrain.driveToDistanceRate + drivetrain.rotateToAngleRate;
-  } else {
+    } else {
       // manual tank
       if (drivetrain.turnController.isEnabled()) {
         drivetrain.turnController.disable();

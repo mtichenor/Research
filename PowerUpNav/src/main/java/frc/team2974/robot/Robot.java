@@ -4,11 +4,13 @@ package frc.team2974.robot;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.command.Scheduler;
+import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.team2974.robot.subsystems.Drivetrain;
 import org.waltonrobotics.MotionLogger;
 import edu.wpi.first.wpilibj.TimedRobot;
-
+import frc.team2974.robot.command.AutoDrive;
+import frc.team2974.robot.OI;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to each mode, as
@@ -19,15 +21,10 @@ public class Robot extends TimedRobot { //extends IterativeRobot {
 
   public static Drivetrain drivetrain;
   public static MotionLogger motionLogger;
-
+  Command autoCommand;
   private static Config.Robot currentRobot;
-
-
   private int counter = 0;
-
-  //PIDController turnController;
-  // TODO:  add rotate, drive to target, drive distance (encoder), combine for auto
-
+  public static OI oi;
   public static Config.Robot getChoosenRobot() {
     return currentRobot;
   }
@@ -39,12 +36,10 @@ public class Robot extends TimedRobot { //extends IterativeRobot {
   public void robotInit() {
     currentRobot = RobotMap.robotIdentifier.get() ? Config.Robot.COMPETITION : Config.Robot.PRACTICE;
 
-    motionLogger = new MotionLogger("/home/lvuser/");
+    //motionLogger = new MotionLogger("/home/lvuser/");
     drivetrain = new Drivetrain(motionLogger);
-
-    //		Drive train
-    //SmartDashboard.putNumber("Speed %", 0.50 /*.75*/);
-    //SmartDashboard.getNumber("Bottom power", .2);
+    autoCommand = new AutoDrive(1);
+    oi = new OI();
 
     drivetrain.shiftDown();
 
@@ -55,7 +50,6 @@ public class Robot extends TimedRobot { //extends IterativeRobot {
   public void disabledInit() {
     drivetrain.cancelControllerMotion();
     drivetrain.reset();
-    //motionLogger.writeMotionDataCSV();
   }
 
   @Override
@@ -65,7 +59,7 @@ public class Robot extends TimedRobot { //extends IterativeRobot {
 
   @Override
   public void autonomousInit() {
-  
+    autoCommand.start();
   }
 
   /**
@@ -80,6 +74,7 @@ public class Robot extends TimedRobot { //extends IterativeRobot {
 
   @Override
   public void teleopInit() {
+    autoCommand.cancel();
     drivetrain.cancelControllerMotion();
     drivetrain.shiftUp(); // start in high gear
     drivetrain.reset();
@@ -128,16 +123,6 @@ public class Robot extends TimedRobot { //extends IterativeRobot {
     //SmartDashboard.putString("Gear", pneumaticsShifter.get() ? "Low" : "High");
 
     /* navX */
-    /* Display 6-axis Processed Angle Data                                      */
-    //SmartDashboard.putBoolean(  "IMU_Connected",        ahrs.isConnected());
-    //SmartDashboard.putBoolean(  "IMU_IsCalibrating",    ahrs.isCalibrating());
-    
-    /* Display tilt-corrected, Magnetometer-based heading (requires             */
-    /* magnetometer calibration to be useful)                                   */
-    //SmartDashboard.putNumber(   "IMU_C_Head",   ahrs.getCompassHeading());
-    
-    /* Display 9-axis Heading (requires magnetometer calibration to be useful)  */
-    //SmartDashboard.putNumber(   "IMU_F_Head",     ahrs.getFusedHeading());
     // Angle is total degrees including rotations (useful for a turret)
     //SmartDashboard.putNumber(   "IMU_Angle",     ahrs.getAngle());
     SmartDashboard.putNumber(   "IMU_Yaw",     drivetrain.ahrs.getYaw());
@@ -145,25 +130,6 @@ public class Robot extends TimedRobot { //extends IterativeRobot {
     /* Display Processed Acceleration Data (Linear Acceleration, Motion Detect) */
     //SmartDashboard.putBoolean(  "IMU_IsMoving",         ahrs.isMoving());
     //SmartDashboard.putBoolean(  "IMU_IsRotating",       ahrs.isRotating());
-
-    /* Display estimates of velocity/displacement.  Note that these values are  */
-    /* not expected to be accurate enough for estimating robot position on a    */
-    /* FIRST FRC Robotics Field, due to accelerometer noise and the compounding */
-    /* of these errors due to single (velocity) integration and especially      */
-    /* double (displacement) integration.                                       */
-    //SmartDashboard.putNumber(   "Velocity_X",           ahrs.getVelocityX());
-    //SmartDashboard.putNumber(   "Velocity_Y",           ahrs.getVelocityY());
-    //SmartDashboard.putNumber(   "Displacement_X",       ahrs.getDisplacementX());
-    //SmartDashboard.putNumber(   "Displacement_Y",       ahrs.getDisplacementY());
-    
-    //SmartDashboard.putNumber(   "IMU_Temp_C",           ahrs.getTempC());
-    
-    /* Sensor Board Information                                                 */
-    //SmartDashboard.putString(   "FirmwareVersion",      ahrs.getFirmwareVersion());
-    
-    /* Connectivity Debugging Support                                           */
-    //SmartDashboard.putNumber(   "IMU_Byte_Count",       ahrs.getByteCount());
-    //SmartDashboard.putNumber(   "IMU_Update_Count",     ahrs.getUpdateCount());
 
     /* Limelight */
     //SmartDashboard.putNumber(   "Limelight tv",          tv);
