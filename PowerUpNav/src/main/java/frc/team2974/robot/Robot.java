@@ -5,7 +5,6 @@ import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.team2974.robot.subsystems.Drivetrain;
-import org.waltonrobotics.MotionLogger;
 import edu.wpi.first.wpilibj.TimedRobot;
 import frc.team2974.robot.command.AutoCommandGroup;
 import frc.team2974.robot.OI;
@@ -19,7 +18,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 public class Robot extends TimedRobot {
 
   public static Drivetrain drivetrain;
-  public static MotionLogger motionLogger;
   private static Config.Robot currentRobot;
   private int dashCounter = 0;
   public static OI oi;
@@ -35,10 +33,8 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotInit() {
-    currentRobot = RobotMap.robotIdentifier.get() ? Config.Robot.COMPETITION : Config.Robot.PRACTICE;
-
-    //motionLogger = new MotionLogger("/home/lvuser/");
-    drivetrain = new Drivetrain(motionLogger);
+    currentRobot = Config.Robot.PRACTICE;
+    drivetrain = new Drivetrain();
     oi = new OI();
     autoMode = new SendableChooser<>();
     autoMode.setDefaultOption("Automode 1", new AutoCommandGroup(1));
@@ -48,9 +44,9 @@ public class Robot extends TimedRobot {
     System.out.println("Robot initializing...");
   }
 
-  @Override
+  //@Override
   public void disabledInit() {
-    drivetrain.cancelControllerMotion();
+    //drivetrain.cancelControllerMotion();
     drivetrain.reset();
   }
 
@@ -77,8 +73,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopInit() {
-    //autoCommand.cancel();
-    drivetrain.cancelControllerMotion();
+    //drivetrain.cancelControllerMotion();
     drivetrain.shiftUp(); // start in high gear
     drivetrain.reset();
   }
@@ -116,9 +111,9 @@ public class Robot extends TimedRobot {
       return;
     }
 
-    System.out.print(caller + ": " + java.time.LocalTime.now() + " R dist: " + -RobotMap.encoderLeft.getDistance() + " L dist: " + -RobotMap.encoderRight.getDistance());
-    System.out.print(" Heading: " +  drivetrain.ahrs.getYaw() + " Rotate rate: " + drivetrain.rotateToAngleRate);
-    System.out.println(" 3D LR offset: " + drivetrain.camtran[0] + " 3D dist offset: " + drivetrain.camtran[2]);
+    //System.out.print(caller + ": " + java.time.LocalTime.now() + " R dist: " + -RobotMap.encoderLeft.getDistance() + " L dist: " + -RobotMap.encoderRight.getDistance());
+    //System.out.print(" Heading: " +  drivetrain.ahrs.getYaw() + " Rotate rate: " + drivetrain.rotateToAngleRate);
+    //System.out.println(" 3D LR offset: " + drivetrain.camtran[0] + " 3D dist offset: " + drivetrain.camtran[2]);
     SmartDashboard.putNumber("R_Enc_Dist", -RobotMap.encoderLeft.getDistance());
     SmartDashboard.putNumber("L_Enc_Dist", -RobotMap.encoderRight.getDistance());
 

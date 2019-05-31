@@ -13,9 +13,12 @@ import static frc.team2974.robot.Robot.drivetrain;
 
 public class AutoCommandGroup extends CommandGroup {
 
+  private int groupChoice;
+
   public AutoCommandGroup(int choice) {
     requires(drivetrain);
 
+    groupChoice = choice;
     System.out.println("AutoCommandGroup choice:  " + choice);
     switch (choice) {
     case 1:
@@ -77,7 +80,7 @@ public class AutoCommandGroup extends CommandGroup {
   // Exit if one of the commands cancels
   @Override
   protected void interrupted() {
-    System.out.println("AutoCommandGroup cancelled (see previous error)");
+    System.out.println("AutoCommandGroup " + groupChoice + " cancelled (see previous error)");
     end();
   }
 }
