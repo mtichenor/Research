@@ -1,8 +1,5 @@
 package frc.team2974.robot;
 
-import frc.team2974.robot.Gamepad.Button;
-//import frc.team2974.robot.Gamepad.POV;
-
 /**
  * This holds many constant values for all parts of the robot. It increases efficiency and effectiveness of the code.
  */
@@ -74,19 +71,8 @@ public final class Config {
 
     public static final int GAMEPAD_PORT = 0;
 
-    // gamepad //
-    public static final int ROTATE90 = Button._1.index();
-		public static final int ROTATE180 = Button._2.index();
-		public static final int ROTATEM90 = Button._3.index();
-		public static final int DRIVE_TO_TARGET = Button._4.index();
-
-
     private Input() {
     }
-  }
-
-  public static final class Driving {
-    public static final double CRUISE_POWER = .3; 
   }
 
   public static final class Path {
@@ -97,9 +83,6 @@ public final class Config {
     public static final double ACCELERATION_MAX = 3.5; //2 m/s^2
 
   }
-  
-
-    
   
   public static final class MotionConstants {
 

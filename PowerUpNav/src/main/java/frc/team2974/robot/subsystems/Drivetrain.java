@@ -7,8 +7,6 @@ import static frc.team2974.robot.RobotMap.motorRight;
 import static frc.team2974.robot.RobotMap.pneumaticsShifter;
 
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-//import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.team2974.robot.Config.MotionConstants;
 import frc.team2974.robot.Config.Path;
 import frc.team2974.robot.Robot;
@@ -22,15 +20,10 @@ import edu.wpi.first.wpilibj.PIDSource;
 import edu.wpi.first.wpilibj.PIDSourceType;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.SPI;
-import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.networktables.*;
 
-/**
- *
- */
 public class Drivetrain extends AbstractDrivetrain {
 
-  private final SendableChooser<Boolean> driveMode;
   public PIDController turnController;
   public PIDController distanceController;
   public double rotateToAngleRate;
@@ -59,17 +52,11 @@ public class Drivetrain extends AbstractDrivetrain {
   static final double kF = 0.00;
   static final double kToleranceDegrees = 3.0f;    
   public float kTargetAngleDegrees;
-  public boolean isMoving = false;
 
   //public Drivetrain() {
   public Drivetrain(MotionLogger motionLogger) {
     super(motionLogger);
-    driveMode = new SendableChooser<>();
-    driveMode.setDefaultOption("Tank", true);
-    //SmartDashboard.putData("Drive Team/Drive Mode", driveMode);
-
     motorRight.setInverted(true);
-
     setEncoderDistancePerPulse();
 
     try {
@@ -90,16 +77,15 @@ public class Drivetrain extends AbstractDrivetrain {
     turnController.disable();
     //LiveWindow.addSensor("DriveSystem", "RotateController", turnController);
 
-    distanceController = new PIDController(1.5, kI, kD, kF, distanceSource, distanceControllerOut, 0.02);
+    distanceController = new PIDController(2.0, kI, kD, kF, distanceSource, distanceControllerOut, 0.02);
     distanceController.setInputRange(-180.0f, 180.0f);
-    distanceController.setOutputRange(-0.7, 0.7);
+    distanceController.setOutputRange(-0.8, 0.8);
     distanceController.setAbsoluteTolerance(0.05);
     distanceController.setContinuous(false);
     distanceController.disable();
   }
 
-  // Define PIDSource based on distance to travel
-  //
+  // Define distance PIDSource
   PIDSource distanceSource = new PIDSource() {
     @Override
     public void setPIDSourceType(PIDSourceType pidSource) {
@@ -150,12 +136,15 @@ public class Drivetrain extends AbstractDrivetrain {
   } 
   
   public void SetTargetAngleRel(float degrees) {
-    if ((ahrs.getYaw() + degrees) > 180.0) {
-      kTargetAngleDegrees = ahrs.getYaw() + degrees - 360.0f; 
-    } else if ((ahrs.getYaw() + degrees) < -180.0) {
-      kTargetAngleDegrees = ahrs.getYaw() + degrees + 360.0f; 
+    float angle;
+
+    angle = ahrs.getYaw() + degrees;
+    if (angle > 180.0) {
+      kTargetAngleDegrees = angle - 360.0f; 
+    } else if (angle < -180.0) {
+      kTargetAngleDegrees = angle + 360.0f; 
     } else {
-      kTargetAngleDegrees = ahrs.getYaw() + degrees;
+      kTargetAngleDegrees = angle;
     }
   }
   
@@ -252,13 +241,13 @@ public class Drivetrain extends AbstractDrivetrain {
     return pneumaticsShifter.get();
   }
 
-  public void Update_Limelight_Tracking()
+  public void updateLimelightTracking()
   {
     // These numbers must be tuned for your Robot!  Be careful!
     final double STEER_K = 0.015;                    // how hard to turn toward the target
-    //final double DRIVE_K = 0.10;                    // how hard to drive fwd toward the target
-    final double DESIRED_Z_DIST = 25.0;             // Z distance to target
-    final double MAX_DRIVE = 0.75;                   // Simple speed limit so we don't drive too fast
+    //final double DRIVE_K = 0.10;                   // how hard to drive fwd toward the target
+    final double DESIRED_Z_DIST = 20.0;              // Z distance to target
+    final double MAX_DRIVE = 0.80;                   // Simple speed limit so we don't drive too fast
 
     tv = NetworkTableInstance.getDefault().getTable("limelight").getEntry("tv").getDouble(0);
     tx = NetworkTableInstance.getDefault().getTable("limelight").getEntry("tx").getDouble(0);
@@ -281,8 +270,10 @@ public class Drivetrain extends AbstractDrivetrain {
       double drive_cmd = 0;
       
       // adjust drive speed
-      if (-camtran[2] - DESIRED_Z_DIST > 60) {
-        drive_cmd = MAX_DRIVE * 0.85;
+      if (-camtran[2] - DESIRED_Z_DIST > 80) {
+        drive_cmd = MAX_DRIVE;
+      } else if (-camtran[2] - DESIRED_Z_DIST > 60) {
+        drive_cmd = MAX_DRIVE * 0.85;   
       } else if (-camtran[2] - DESIRED_Z_DIST > 40) {
         drive_cmd = MAX_DRIVE * 0.65;   
       } else if (-camtran[2] - DESIRED_Z_DIST > 20) {
@@ -355,9 +346,4 @@ public class Drivetrain extends AbstractDrivetrain {
   public double getMaxAcceleration() {
     return Path.ACCELERATION_MAX;
   }
-
-  public boolean isTankDrive() {
-    return driveMode.getSelected();
-  }
-
 }

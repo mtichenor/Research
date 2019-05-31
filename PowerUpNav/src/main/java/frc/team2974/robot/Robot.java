@@ -1,30 +1,31 @@
 package frc.team2974.robot;
 
 //import static frc.team2974.robot.RobotMap.pneumaticsShifter;
-
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.team2974.robot.subsystems.Drivetrain;
 import org.waltonrobotics.MotionLogger;
 import edu.wpi.first.wpilibj.TimedRobot;
-import frc.team2974.robot.command.AutoDrive;
+import frc.team2974.robot.command.AutoCommandGroup;
 import frc.team2974.robot.OI;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to each mode, as
  * described in the IterativeRobot documentation. If you change the name of this class or the package after creating
  * this project, you must also update the manifest file in the resource directory.
  */
-public class Robot extends TimedRobot { //extends IterativeRobot {
+public class Robot extends TimedRobot {
 
   public static Drivetrain drivetrain;
   public static MotionLogger motionLogger;
-  Command autoCommand;
   private static Config.Robot currentRobot;
-  private int counter = 0;
+  private int dashCounter = 0;
   public static OI oi;
+  private Command autoCommand;
+  private SendableChooser <AutoCommandGroup> autoMode;
+
   public static Config.Robot getChoosenRobot() {
     return currentRobot;
   }
@@ -38,11 +39,12 @@ public class Robot extends TimedRobot { //extends IterativeRobot {
 
     //motionLogger = new MotionLogger("/home/lvuser/");
     drivetrain = new Drivetrain(motionLogger);
-    autoCommand = new AutoDrive(1);
     oi = new OI();
-
+    autoMode = new SendableChooser<>();
+    autoMode.setDefaultOption("Automode 1", new AutoCommandGroup(1));
+    autoMode.addOption("Automode 2", new AutoCommandGroup(2));
+    SmartDashboard.putData("AutoCommandGroup", autoMode);
     drivetrain.shiftDown();
-
     System.out.println("Robot initializing...");
   }
 
@@ -59,6 +61,7 @@ public class Robot extends TimedRobot { //extends IterativeRobot {
 
   @Override
   public void autonomousInit() {
+    autoCommand = autoMode.getSelected();
     autoCommand.start();
   }
 
@@ -67,14 +70,14 @@ public class Robot extends TimedRobot { //extends IterativeRobot {
    */
   @Override
   public void autonomousPeriodic() {
+    drivetrain.updateLimelightTracking();
     Scheduler.getInstance().run();
-    drivetrain.Update_Limelight_Tracking();
     updateSmartDashboard("Auto");
   }
 
   @Override
   public void teleopInit() {
-    autoCommand.cancel();
+    //autoCommand.cancel();
     drivetrain.cancelControllerMotion();
     drivetrain.shiftUp(); // start in high gear
     drivetrain.reset();
@@ -85,8 +88,8 @@ public class Robot extends TimedRobot { //extends IterativeRobot {
    */
   @Override
   public void teleopPeriodic() {
+    drivetrain.updateLimelightTracking();
     Scheduler.getInstance().run();
-    drivetrain.Update_Limelight_Tracking();
     updateSmartDashboard("TeleOp");
   }
 
@@ -106,10 +109,10 @@ public class Robot extends TimedRobot { //extends IterativeRobot {
    */
   private void updateSmartDashboard(String caller) {
     // only update every 10th call to save CPU and bandwidth (about 500ms)
-    if (counter == 50) {
-      counter = 0;
+    if (dashCounter == 50) {
+      dashCounter = 0;
     } else {
-      counter++;
+      dashCounter++;
       return;
     }
 
@@ -124,22 +127,22 @@ public class Robot extends TimedRobot { //extends IterativeRobot {
 
     /* navX */
     // Angle is total degrees including rotations (useful for a turret)
-    //SmartDashboard.putNumber(   "IMU_Angle",     ahrs.getAngle());
-    SmartDashboard.putNumber(   "IMU_Yaw",     drivetrain.ahrs.getYaw());
+    //SmartDashboard.putNumber("IMU_Angle", ahrs.getAngle());
+    SmartDashboard.putNumber("IMU_Yaw", drivetrain.ahrs.getYaw());
 
     /* Display Processed Acceleration Data (Linear Acceleration, Motion Detect) */
-    //SmartDashboard.putBoolean(  "IMU_IsMoving",         ahrs.isMoving());
-    //SmartDashboard.putBoolean(  "IMU_IsRotating",       ahrs.isRotating());
+    //SmartDashboard.putBoolean("IMU_IsMoving", ahrs.isMoving());
+    //SmartDashboard.putBoolean("IMU_IsRotating", ahrs.isRotating());
 
     /* Limelight */
     //SmartDashboard.putNumber(   "Limelight tv",          tv);
-    SmartDashboard.putNumber(   "Limelight tx",          drivetrain.tx);
-    SmartDashboard.putNumber(   "Limelight ty",          drivetrain.ty);
-    SmartDashboard.putNumber(   "Limelight ta",          drivetrain.ta);
-    SmartDashboard.putBoolean(   "Limelight target?",            drivetrain.limelightHasValidTarget);
-    SmartDashboard.putNumber(   "Limelight 3D x",          drivetrain.camtran[0]);
-    //SmartDashboard.putNumber(   "Limelight 3D y",          drivetrain.camtran[1]);
-    SmartDashboard.putNumber(   "Limelight 3D z",          drivetrain.camtran[2]);
+    SmartDashboard.putNumber("Limelight tx", drivetrain.tx);
+    SmartDashboard.putNumber("Limelight ty", drivetrain.ty);
+    SmartDashboard.putNumber("Limelight ta", drivetrain.ta);
+    SmartDashboard.putBoolean("Limelight target?", drivetrain.limelightHasValidTarget);
+    SmartDashboard.putNumber("Limelight 3D x", drivetrain.camtran[0]);
+    //SmartDashboard.putNumber("Limelight 3D y", drivetrain.camtran[1]);
+    SmartDashboard.putNumber("Limelight 3D z", drivetrain.camtran[2]);
     
   }
 }

@@ -52,10 +52,6 @@ public class DriveCommand extends Command {
       rightPower = -leftPower;       
     } else if (gamepad.getButton(8) && drivetrain.limelightHasValidTarget) {
       // auto drive to target
-      if (drivetrain.turnController.isEnabled()) {
-        drivetrain.turnController.disable();
-      }
-
       leftPower = drivetrain.limelightDriveCommand - drivetrain.limelightSteerCommand;
       rightPower = drivetrain.limelightDriveCommand + drivetrain.limelightSteerCommand;   
     } else if (gamepad.getButton(7)) {
@@ -85,13 +81,6 @@ public class DriveCommand extends Command {
 
     // set speeds
     drivetrain.setSpeeds(leftPower, rightPower);
-    
-    // are we moving
-    if ((leftPower > 0) || (rightPower > 0)) {
-      drivetrain.isMoving = true;
-    } else {
-      drivetrain.isMoving = false;
-    }
   }
 
   // Called just before this Command runs the first time
@@ -102,9 +91,7 @@ public class DriveCommand extends Command {
   // Called repeatedly when this Command is scheduled to run
   @Override
   protected void execute() {
-    if (drivetrain.isTankDrive()) {
-      tankDrive();
-    }
+    tankDrive();
   }
 
   // Make this return true when this Command no longer needs to run execute()
