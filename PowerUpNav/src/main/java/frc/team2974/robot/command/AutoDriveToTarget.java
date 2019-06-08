@@ -29,9 +29,20 @@ public class AutoDriveToTarget extends Command {
   
     if (drivetrain.limelightHasValidTarget) {
       // auto drive to target
-      //System.out.println("LimeLight auto drive value: " + drivetrain.limelightDriveCommand);
-      leftPower = drivetrain.limelightDriveCommand - drivetrain.limelightSteerCommand;
-      rightPower = drivetrain.limelightDriveCommand + drivetrain.limelightSteerCommand;
+      // -camtran[2] is the forward distance to target
+      // camtran[0] is the left(-)/right(+) offset from target
+      // steer toward target perpendicular line while driving toward target
+      if ((drivetrain.camtran[2] != 0 && drivetrain.camtran[2] < -36) &&
+          (drivetrain.camtran[0] > 6 || drivetrain.camtran[0] < -6)) {
+        // steer toward target perpendicular line so we can finish square with the target
+        double offset = drivetrain.camtran[0] / 30 * 0.15; 
+        leftPower = drivetrain.limelightDriveCommand - (drivetrain.limelightSteerCommand - offset);   
+        rightPower = drivetrain.limelightDriveCommand + (drivetrain.limelightSteerCommand - offset);
+        System.out.println("leftPower: " + leftPower + ", rightPower: " + rightPower + ", Offset: " + offset);
+      } else { // we are aligned, no more adjustment necessary
+        leftPower = drivetrain.limelightDriveCommand - drivetrain.limelightSteerCommand;
+        rightPower = drivetrain.limelightDriveCommand + drivetrain.limelightSteerCommand;
+        }  
     } else {
       System.out.println("AutoDriveToTarget cancelled - no target acquired!");
       parentCommandGroup.cancel();  // cancel all remaining commands in command group

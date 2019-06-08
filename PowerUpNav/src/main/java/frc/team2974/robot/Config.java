@@ -9,8 +9,8 @@ public final class Config {
   }
 
   public enum Robot {
-    PRACTICE(0.7800, 0.000409, 775, false, false),
-    COMPETITION(0.7800, 0.0002045, 386, true, true);
+    PRACTICE(0.7800, 0.000409, 775, false, false);
+    //COMPETITION(0.7800, 0.0002045, 386, true, true);
 
     private final double robotWidth;
     private final double distancePerPulse;

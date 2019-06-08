@@ -52,8 +52,20 @@ public class DriveCommand extends Command {
       rightPower = -leftPower;       
     } else if (gamepad.getButton(8) && drivetrain.limelightHasValidTarget) {
       // auto drive to target
-      leftPower = drivetrain.limelightDriveCommand - drivetrain.limelightSteerCommand;
-      rightPower = drivetrain.limelightDriveCommand + drivetrain.limelightSteerCommand;   
+      // -camtran[2] is the forward distance to target
+      // camtran[0] is the left(-)/right(+) offset from target
+      // steer toward target perpendicular line while driving toward target
+      if ((drivetrain.camtran[2] != 0 && drivetrain.camtran[2] < -36) &&
+          (drivetrain.camtran[0] > 6 || drivetrain.camtran[0] < -6)) {
+        // steer toward target perpendicular line so we can finish square with the target
+        double offset = drivetrain.camtran[0] / 30 * 0.15; 
+        leftPower = drivetrain.limelightDriveCommand - (drivetrain.limelightSteerCommand - offset);   
+        rightPower = drivetrain.limelightDriveCommand + (drivetrain.limelightSteerCommand - offset);
+        System.out.println("leftPower: " + leftPower + ", rightPower: " + rightPower + ", Offset: " + offset);
+      } else { // we are aligned, no more adjustment necessary
+        leftPower = drivetrain.limelightDriveCommand - drivetrain.limelightSteerCommand;
+        rightPower = drivetrain.limelightDriveCommand + drivetrain.limelightSteerCommand;
+        }  
     } else if (gamepad.getButton(7)) {
       // maintain current heading with speed of average of left and right throttles
       drivetrain.SetTurnController(drivetrain.ahrs.getYaw());
@@ -64,7 +76,7 @@ public class DriveCommand extends Command {
       // drive forward 1 meter at current heading
       drivetrain.SetTurnController(drivetrain.ahrs.getYaw());
       drivetrain.SetDistanceController(1.0);
-      leftPower = -drivetrain.driveToDistanceRate - drivetrain.rotateToAngleRate;;
+      leftPower = -drivetrain.driveToDistanceRate - drivetrain.rotateToAngleRate;
       rightPower = -drivetrain.driveToDistanceRate + drivetrain.rotateToAngleRate;
     } else {
       // manual tank

@@ -35,14 +35,18 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotInit() {
-    currentRobot = RobotMap.robotIdentifier.get() ? Config.Robot.COMPETITION : Config.Robot.PRACTICE;
+    //currentRobot = RobotMap.robotIdentifier.get() ? Config.Robot.COMPETITION : Config.Robot.PRACTICE;
+    currentRobot = Config.Robot.PRACTICE;
 
     //motionLogger = new MotionLogger("/home/lvuser/");
-    drivetrain = new Drivetrain(motionLogger);
+    //drivetrain = new Drivetrain(motionLogger);
+    drivetrain = new Drivetrain();
     oi = new OI();
     autoMode = new SendableChooser<>();
     autoMode.setDefaultOption("Automode 1", new AutoCommandGroup(1));
     autoMode.addOption("Automode 2", new AutoCommandGroup(2));
+    autoMode.addOption("Spline 1", new AutoCommandGroup(3));
+    autoMode.addOption("Spline 2", new AutoCommandGroup(4));
     SmartDashboard.putData("AutoCommandGroup", autoMode);
     drivetrain.shiftDown();
     System.out.println("Robot initializing...");
@@ -77,7 +81,9 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopInit() {
-    //autoCommand.cancel();
+    if (autoCommand != null) {
+			autoCommand.cancel();
+		}
     drivetrain.cancelControllerMotion();
     drivetrain.shiftUp(); // start in high gear
     drivetrain.reset();
@@ -108,7 +114,7 @@ public class Robot extends TimedRobot {
    * Put things in here you want to update for SmartDashboard.
    */
   private void updateSmartDashboard(String caller) {
-    // only update every 10th call to save CPU and bandwidth (about 500ms)
+    // only update every 50th call to save CPU and bandwidth
     if (dashCounter == 50) {
       dashCounter = 0;
     } else {
@@ -116,9 +122,9 @@ public class Robot extends TimedRobot {
       return;
     }
 
-    System.out.print(caller + ": " + java.time.LocalTime.now() + " R dist: " + -RobotMap.encoderLeft.getDistance() + " L dist: " + -RobotMap.encoderRight.getDistance());
-    System.out.print(" Heading: " +  drivetrain.ahrs.getYaw() + " Rotate rate: " + drivetrain.rotateToAngleRate);
-    System.out.println(" 3D LR offset: " + drivetrain.camtran[0] + " 3D dist offset: " + drivetrain.camtran[2]);
+    //System.out.print(caller + ": " + java.time.LocalTime.now() + " R dist: " + -RobotMap.encoderLeft.getDistance() + " L dist: " + -RobotMap.encoderRight.getDistance());
+    //System.out.print(" Heading: " +  drivetrain.ahrs.getYaw() + " Rotate rate: " + drivetrain.rotateToAngleRate);
+    //System.out.println(" 3D LR offset: " + drivetrain.camtran[0] + " 3D dist offset: " + drivetrain.camtran[2]);
     SmartDashboard.putNumber("R_Enc_Dist", -RobotMap.encoderLeft.getDistance());
     SmartDashboard.putNumber("L_Enc_Dist", -RobotMap.encoderRight.getDistance());
 
@@ -143,7 +149,9 @@ public class Robot extends TimedRobot {
     SmartDashboard.putNumber("Limelight 3D x", drivetrain.camtran[0]);
     //SmartDashboard.putNumber("Limelight 3D y", drivetrain.camtran[1]);
     SmartDashboard.putNumber("Limelight 3D z", drivetrain.camtran[2]);
-    
+    SmartDashboard.putNumber("Limelight 3D pitch", drivetrain.camtran[3]);
+    SmartDashboard.putNumber("Limelight 3D yaw", drivetrain.camtran[4]);
+    SmartDashboard.putNumber("Limelight 3D roll", drivetrain.camtran[5]); 
   }
 }
   

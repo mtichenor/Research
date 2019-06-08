@@ -12,7 +12,7 @@ import frc.team2974.robot.Config.Path;
 import frc.team2974.robot.Robot;
 import frc.team2974.robot.command.teleop.DriveCommand;
 import org.waltonrobotics.AbstractDrivetrain;
-import org.waltonrobotics.MotionLogger;
+//import org.waltonrobotics.MotionLogger;
 import org.waltonrobotics.controller.RobotPair;
 import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.PIDOutput;
@@ -46,16 +46,16 @@ public class Drivetrain extends AbstractDrivetrain {
   /* SmartDashboard in Test mode has support for helping you tune    */
   /* controllers by displaying a form where you can enter new P, I,  */
   /* and D constants and test the mechanism.                         */
-  static final double kP = 0.04;
+  static final double kP = 0.03;
   static final double kI = 0.00;
   static final double kD = 0.00;
   static final double kF = 0.00;
-  static final double kToleranceDegrees = 3.0f;    
+  static final double kToleranceDegrees = 1.5f;    
   public float kTargetAngleDegrees;
 
-  //public Drivetrain() {
-  public Drivetrain(MotionLogger motionLogger) {
-    super(motionLogger);
+  public Drivetrain() {
+    //public Drivetrain(MotionLogger motionLogger) {
+    //super(motionLogger);
     motorRight.setInverted(true);
     setEncoderDistancePerPulse();
 
@@ -70,19 +70,21 @@ public class Drivetrain extends AbstractDrivetrain {
     }
 
     turnController = new PIDController(kP, kI, kD, kF, ahrs, turnControllerOut, 0.02);
-    turnController.setInputRange(-180.0f, 180.0f);
-    turnController.setOutputRange(-0.7, 0.7);
+    turnController.setInputRange(-180.0, 180.0);
+    turnController.setOutputRange(-0.9, 0.9);
     turnController.setAbsoluteTolerance(kToleranceDegrees);
     turnController.setContinuous(true);
     turnController.disable();
     //LiveWindow.addSensor("DriveSystem", "RotateController", turnController);
 
-    distanceController = new PIDController(2.0, kI, kD, kF, distanceSource, distanceControllerOut, 0.02);
-    distanceController.setInputRange(-180.0f, 180.0f);
-    distanceController.setOutputRange(-0.8, 0.8);
+    distanceController = new PIDController(2.0, 0.0, 0.0, 0.0, distanceSource, distanceControllerOut, 0.02);
+    distanceController.setInputRange(-180.0, 180.0);
+    distanceController.setOutputRange(-0.9, 0.9);
     distanceController.setAbsoluteTolerance(0.05);
     distanceController.setContinuous(false);
     distanceController.disable();
+
+    updateLimelightTracking();
   }
 
   // Define distance PIDSource

@@ -50,7 +50,7 @@ public class AutoSpin extends Command {
 
   // Called once after isFinished returns true
   protected void end() {
-    System.out.println("AutoSpin completed: value=" + autoValue);
+    System.out.println("AutoSpin completed: value=" + drivetrain.turnController.getSetpoint() + ".  Actual value: " + drivetrain.ahrs.getAngle());
     drivetrain.setSpeeds(0, 0);
   }
 

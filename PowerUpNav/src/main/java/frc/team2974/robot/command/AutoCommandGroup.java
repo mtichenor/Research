@@ -20,42 +20,51 @@ public class AutoCommandGroup extends CommandGroup {
     switch (choice) {
     case 1:
       addSequential(new AutoSpin(90));
-      addSequential(new WaitCommand(0.5));  
+      addSequential(new WaitCommand(0.25)); 
       addSequential(new AutoSpin(180));
-      addSequential(new WaitCommand(0.5));  
+      addSequential(new WaitCommand(0.25)); 
       addSequential(new AutoSpin(-90));
-      addSequential(new WaitCommand(0.5));  
+      addSequential(new WaitCommand(0.25)); 
       addSequential(new AutoRotate(0));
-      addSequential(new WaitCommand(0.5)); 
+      addSequential(new WaitCommand(0.25));
       addSequential(new AutoSpin(90));
-      addSequential(new WaitCommand(0.5));  
+      addSequential(new WaitCommand(0.25));  
       addSequential(new AutoSpin(180));
-      addSequential(new WaitCommand(0.5));  
+      addSequential(new WaitCommand(0.25));  
       addSequential(new AutoSpin(-90));
-      addSequential(new WaitCommand(0.5));  
-      addSequential(new AutoRotate(0));
-      addSequential(new WaitCommand(0.5)); 
-      addSequential(new AutoSpin(90));
-      addSequential(new WaitCommand(0.5));  
-      addSequential(new AutoSpin(180));
-      addSequential(new WaitCommand(0.5));  
-      addSequential(new AutoSpin(-90));
-      addSequential(new WaitCommand(0.5));  
+      addSequential(new WaitCommand(0.25)); 
       addSequential(new AutoRotate(0)); 
       break;
     case 2:
       addSequential(new AutoDriveToTarget(this));  
-      addSequential(new WaitCommand(0.5));  
+      addSequential(new WaitCommand(0.25));  
       addSequential(new AutoDriveDistance(-0.5));  
       addSequential(new AutoSpin(180));
-      addSequential(new AutoDriveDistance(0.5));
+      addSequential(new AutoDriveDistance(1.5));
       addSequential(new AutoSpin(180));
+      addSequential(new AutoDriveDistance(0.75));
       addSequential(new AutoDriveToTarget(this));
-      addSequential(new WaitCommand(0.5));  
+      addSequential(new WaitCommand(0.25));  
       addSequential(new AutoDriveDistance(-0.5));  
-      addSequential(new AutoSpin(180));
+      addSequential(new AutoRotate(180));
+      addSequential(new AutoDriveDistance(1.5));
+      addSequential(new AutoRotate(0));
+      addSequential(new AutoDriveDistance(0.75));
+      addSequential(new AutoDriveToTarget(this));
+      break;    
+    case 3:
+      addSequential(new AutoDriveToTarget(this));  
+      addSequential(new WaitCommand(0.25));  
+      addSequential(new AutoDriveDistance(-0.5));  
+      addSequential(new AutoRotate(170));
       addSequential(new AutoDriveDistance(0.5));
-      addSequential(new AutoSpin(180));
+      addSequential(new AutoRotate(200));
+      addSequential(new AutoDriveDistance(0.5));
+      addSequential(new AutoRotate(0));
+      addSequential(new AutoDriveDistance(0.3));
+      addSequential(new AutoDriveToTarget(this));
+      break;
+    case 4:
       addSequential(new AutoDriveToTarget(this));
       break;
     }
