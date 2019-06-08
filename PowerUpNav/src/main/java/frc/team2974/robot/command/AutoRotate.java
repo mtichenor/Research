@@ -50,7 +50,7 @@ public class AutoRotate extends Command {
 
   // Called once after isFinished returns true
   protected void end() {
-    System.out.println("AutoRotate completed: value=" + autoValue);
+    System.out.println("AutoRotate completed: value=" + drivetrain.turnController.getSetpoint() + ".  Actual value: " + drivetrain.ahrs.getAngle());
     drivetrain.setSpeeds(0, 0);
   }
 
