@@ -46,9 +46,9 @@ public class AutoCommandGroup extends CommandGroup {
       addSequential(new AutoDriveToTarget(this));
       addSequential(new WaitCommand(0.25));  
       addSequential(new AutoDriveDistance(-0.5));  
-      addSequential(new AutoRotate(180));
+      addSequential(new AutoSpin(180));
       addSequential(new AutoDriveDistance(1.5));
-      addSequential(new AutoRotate(0));
+      addSequential(new AutoSpin(180));
       addSequential(new AutoDriveDistance(0.75));
       addSequential(new AutoDriveToTarget(this));
       break;    
